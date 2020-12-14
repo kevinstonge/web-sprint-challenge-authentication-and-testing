@@ -1,7 +1,45 @@
+const dbConfig = require('../../data/dbConfig');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const router = require('express').Router();
+const Users = require('./auth-model.js');
 
-router.post('/register', (req, res) => {
-  res.end('implement register, please!');
+const checkIfUserExists = async (req, res, next) => {
+  try {
+    const username = req.body.username;
+    if (username) {
+      const user = await Users.getUser(username);
+      if (user) { req.userExists = true; req.user = user }
+      else { req.userExists = false; }
+      next();
+    }
+    else {
+      res.status(400).json({message: "error: you must provide a username"})
+    }
+  }
+  catch (error) {
+    throw error;
+  }
+}
+
+router.post('/register', checkIfUserExists, async (req, res) => {
+  if (req.userExists) {
+    res.status(400).json({message: "username taken"})
+  }
+  else {
+    const { username, password } = req.body;
+    if (username && password) {
+      const hash = bcrypt.hashSync(password);
+      const newUserObject = { username, password: hash }
+      const newUserId = await Users.createUser(newUserObject);
+      const newUser = await Users.getUser(username);
+      const token = jwt.sign({username}, process.env.JWT_SECRET, { expiresIn: '7d' });
+      res.status(201).json({newUser, token});
+    }
+    else {
+      res.status(400).json({message: "username and password required"})
+    }
+  }
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
@@ -28,8 +66,24 @@ router.post('/register', (req, res) => {
   */
 });
 
-router.post('/login', (req, res) => {
-  res.end('implement login, please!');
+router.post('/login', checkIfUserExists, (req, res) => {
+  if (req.userExists) {
+    if (req.body.username && req.body.password) {
+      if (bcrypt.compareSync(req.body.password, req.user.password)) {
+        const token = jwt.sign({username: req.user.username}, process.env.JWT_SECRET, { expiresIn: '7d' });
+        res.status(200).json({ message: `welcome, ${req.user.username}`, token })
+      }
+      else {
+        res.status(401).json({ message: "invalid credentials" })
+      }
+    }
+    else {
+      res.status(400).json({ message: "username and password required"})
+    }
+  }
+  else {
+    res.status(400).json({message: "failed to log in: user does not exist"})
+  }
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.

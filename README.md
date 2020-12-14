@@ -25,9 +25,15 @@ We will hash the user's password using `bcryptjs`, and use JSON Web Tokens and t
 Be prepared to demonstrate your understanding of this week's concepts by answering questions on the following topics.
 
 1. Differences between using _sessions_ or _JSON Web Tokens_ for authentication.
+   sessions are stored on the server (in a manner specified by the developer, usually in a database, but can also be stored in memory), JWTs are stored by the client. One advantage of not storing authentication status data on the server is that no cleanup of this data is required. The JWTs can have expiration dates encoded into them which can be used as part of the authentication check that the server does upon receiving the token.
 2. What does `bcryptjs` do to help us store passwords in a secure manner?
+   bcryptjs hashes passwords one-directionally. A hashing algorithm runs input information through a series of steps that will always produce the same output for the same input but that algorithm cannot be run in reverse. Therefore the hashed password cannot be used to algorithmically calculate the actual password. However, since many users have similar passwords, an attacker could deduce many passwords by using a table of known password hashes. To make this difficult for attackers, bcrypt adds 'salt' to the hashes (an additional hashed input)
 3. How are unit tests different from integration and end-to-end testing?
+   unit tests test individual functions to ensure that they behave as expected in isolation
+   integration tests are used to check that multiple functions interact with each other as expected
+   end-to-end testing is used to check that the entire application works as expected
 4. How does _Test Driven Development_ change the way we write applications and tests?
+   TDD suggests that developers begin their work by writing the tests first and then writing their code to satisfy the tests. There are many benefits to TDD, your production code will be less buggy, more modularized, contain more 'pure functions', and of course be less buggy.
 
 You are expected to be able to answer questions in these areas.
 
